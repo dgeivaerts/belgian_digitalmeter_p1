@@ -1,3 +1,5 @@
 pyserial
 crcmod
 tabulate
+psycopg2
+pytz

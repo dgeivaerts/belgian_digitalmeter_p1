@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+import traceback
 
 # This script will read data from serial connected to the digital meter P1 port
 
@@ -7,46 +8,44 @@
 # https://github.com/jensdepuydt
 
 import serial
-import sys
 import crcmod.predefined
+import psycopg2
 import re
-from tabulate import tabulate
+from datetime import datetime
+import pytz
 
+timezone = pytz.timezone('Europe/Brussels')
+schema="public"
+table="telegram"
+obiscodes = {
+    #Timestamp
+    "0-0:1.0.0": {"previous":"", "current":""},
+    #Day rate ext
+    "1-0:1.8.1": {"previous":"", "current":""},
+    #Day rate int
+    "1-0:2.8.1": {"previous":"", "current":""},
+    #Night rate ext
+    "1-0:1.8.2": {"previous":"", "current":""},
+    #Night rate ext
+    "1-0:2.8.2": {"previous":"", "current":""},
+    # extract second
+    "1-0:1.7.0": {"previous":"", "current":""},
+    # inject second
+    "1-0:2.7.0": {"previous":"", "current":""},
+
+    #Tabel piek maand extraction
+    "1-0:1.6.0": {"previous":"", "current":""},
+    #Tabel gas
+    "0-1:24.2.3": {"previous":"", "current":""},
+    #Tabel water
+    "0-2:24.2.1": {"previous":"", "current":""}
+}
 # Change your serial port here:
-serialport = '/dev/ttyUSB0'
+#serialport = '/dev/ttyUSB0'
+serialport = 'COM3'
 
 # Enable debug if needed:
-debug = False
-
-# Add/update OBIS codes here:
-obiscodes = {
-    "0-0:1.0.0": "Timestamp",
-    "0-0:96.3.10": "Switch electricity",
-    "0-1:24.4.0": "Switch gas",
-    "0-0:96.1.1": "Meter serial electricity",
-    "0-1:96.1.1": "Meter serial gas",
-    "0-0:96.14.0": "Current rate (1=day,2=night)",
-    "1-0:1.8.1": "Rate 1 (day) - total consumption",
-    "1-0:1.8.2": "Rate 2 (night) - total consumption",
-    "1-0:2.8.1": "Rate 1 (day) - total production",
-    "1-0:2.8.2": "Rate 2 (night) - total production",
-    "1-0:21.7.0": "L1 consumption",
-    "1-0:41.7.0": "L2 consumption",
-    "1-0:61.7.0": "L3 consumption",
-    "1-0:1.7.0": "All phases consumption",
-    "1-0:22.7.0": "L1 production",
-    "1-0:42.7.0": "L2 production",
-    "1-0:62.7.0": "L3 production",
-    "1-0:2.7.0": "All phases production",
-    "1-0:32.7.0": "L1 voltage",
-    "1-0:52.7.0": "L2 voltage",
-    "1-0:72.7.0": "L3 voltage",
-    "1-0:31.7.0": "L1 current",
-    "1-0:51.7.0": "L2 current",
-    "1-0:71.7.0": "L3 current",
-    "0-1:24.2.3": "Gas consumption"
-    }
-
+debug = True
 
 def checkcrc(p1telegram):
     # check CRC16 checksum of telegram and return False if not matching
@@ -66,52 +65,83 @@ def checkcrc(p1telegram):
         return False
     return True
 
+def createTableSQL():
+    sql="""
+        CREATE TABLE {tableschema}."{tablename}" (
+                                                     ts timestamp with time zone NOT NULL,
+                                                     value numeric(10,3) NOT NULL,
+            CONSTRAINT "{tablename}_pk" PRIMARY KEY (ts)
+            );
+        """
+    #        COMMENT ON TABLE public."{tablename}" IS "{tablecomment}";
+    for obis in obiscodes:
+        if obis!="0-0:1.0.0":
+            #        print(sql.format(tablename=obis, tablecomment=obiscodes[obis]["comment"]))
+            executeSQL(sql.format(tableschema=schema,tablename=obis))
 
-def parsetelegramline(p1line):
-    # parse a single line of the telegram and try to get relevant data from it
-    unit = ""
-    timestamp = ""
-    if debug:
-        print(f"Parsing:{p1line}")
-    # get OBIS code from line (format:OBIS(value)
-    obis = p1line.split("(")[0]
-    if debug:
-        print(f"OBIS:{obis}")
-    # check if OBIS code is something we know and parse it
+def executeSQL(sql):
+    try:
+        conn = psycopg2.connect(
+            database="postgres",
+            user="postgres",
+            password="example",
+            host="localhost",
+            port="5432"
+        )
+        cur = conn.cursor()
+        cur.execute(sql)
+        print(sql)
+        cur.close()
+        conn.commit()
+    except (Exception, psycopg2.DatabaseError) as error:
+        print(error)
+    finally:
+        if conn:
+            conn.close()
+            print("Database connection closed.")
+
+def processTelegramLine(line):
+    print("Processing " + line)
+    obis = line.split("(")[0]
     if obis in obiscodes:
-        # get values from line.
-        # format:OBIS(value), gas: OBIS(timestamp)(value)
-        values = re.findall(r'\(.*?\)', p1line)
-        value = values[0][1:-1]
-        # timestamp requires removal of last char
-        if obis == "0-0:1.0.0" or len(values) > 1:
-            value = value[:-1]
-        # report of connected gas-meter...
-        if len(values) > 1:
-            timestamp = value
-            value = values[1][1:-1]
-        # serial numbers need different parsing: (hex to ascii)
-        if "96.1.1" in obis:
-            value = bytearray.fromhex(value).decode()
-        else:
-            # separate value and unit (format:value*unit)
-            lvalue = value.split("*")
-            value = float(lvalue[0])
-            if len(lvalue) > 1:
-                unit = lvalue[1]
-        # return result in tuple: description,value,unit,timestamp
-        if debug:
-            print (f"description:{obiscodes[obis]}, \
-                     value:{value}, \
-                     unit:{unit}")
-        return (obiscodes[obis], value, unit)
-    else:
-        return ()
+        obiscodes[obis]["current"] = re.findall(r'\(.*?\)', line)
+        print("Processed: "+ obis + " with value " + str(obiscodes[obis]["current"]))
+
+
+def processObisCodes():
+    sql= """
+         insert into {tableschema}."{tablename}"
+         values('{ts}', {value}); \
+         """
+    for obis in obiscodes:
+        if obis!="0-0:1.0.0":
+            if obiscodes[obis]["current"]!= obiscodes[obis]["previous"]:
+                # change of data, so store in db
+                if len(obiscodes[obis]["current"]) == 1:
+                    ts= obiscodes["0-0:1.0.0"]["current"][0]
+                    value=obiscodes[obis]["current"][0]
+                else:
+                    ts=obiscodes[obis]["current"][0]
+                    value=obiscodes[obis]["current"][1]
+                if ts[-2:-1]=="S":
+                    is_dst_val=True
+                else:
+                    is_dst_val=False
+                value=value[1:value.find('*')]
+                executeSQL(sql.format(tableschema=schema,tablename=obis,ts=str(timezone.localize(datetime.strptime(ts[1:-2],'%y%m%d%H%M%S'),is_dst=is_dst_val)) ,value=value))
+                obiscodes[obis]["previous"]=obiscodes[obis]["current"]
+
+def processTelegram(telegram):
+    for line in telegram.split(b'\r\n'):
+        processTelegramLine(line.decode('ascii'))
+    processObisCodes()
+    print(obiscodes["1-0:1.7.0"]["current"][0] + ' ' + obiscodes["1-0:2.7.0"]["current"][0])
 
 
 def main():
     ser = serial.Serial(serialport, 115200, xonxoff=1)
     p1telegram = bytearray()
+    createTableSQL()
     while True:
         try:
             # read input from serial port
@@ -136,16 +166,7 @@ def main():
                     print('*' * 40)
                 if checkcrc(p1telegram):
                     # parse telegram contents, line by line
-                    output = []
-                    for line in p1telegram.split(b'\r\n'):
-                        r = parsetelegramline(line.decode('ascii'))
-                        if r:
-                            output.append(r)
-                            if debug:
-                                print(f"desc:{r[0]}, val:{r[1]}, u:{r[2]}")
-                    print(tabulate(output,
-                                   headers=['Description', 'Value', 'Unit'],
-                                   tablefmt='github'))
+                    processTelegram(p1telegram)
         except KeyboardInterrupt:
             print("Stopping...")
             ser.close()

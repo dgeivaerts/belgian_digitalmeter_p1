@@ -1,0 +1,55 @@
+/FLU5\253972606_G
+
+0-0:96.1.4  (50221)
+0-0:96.1.1  (3153414731323030333337353730)                                          Serial Elec
+0-0:96.1.2  ()
+0-0:1.0.0   (250727211724S)                                                         Timestamp
+1-0:1.8.1   (000049.439*kWh)                                                        Total energy extraction in kWh at the day rate.
+1-0:1.8.2   (000174.490*kWh)                                                        Total energy extraction in kWh at the night rate.
+1-0:2.8.1   (000040.338*kWh)                                                        Total energy injection in kWh at the day rate.
+1-0:2.8.2   (000011.691*kWh)                                                        Total energy injection in kWh at the night rate.
+0-0:96.14.0 (0002)                                                                  Current rate (1=day,2=night)
+1-0:1.4.0   (00.116*kW)                                                             Positive active demand in a current demand period (A+) [kW]
+1-0:1.6.0   (250712220000S)(04.517*kW)  	                                        Current month's peak extraction in kW.
+0-0:98.1.0  (1)(1-0:1.6.0)(1-0:1.6.0)(240801000000S)(240701000000S)(00.000*kW)      Iets van maand data ???
+1-0:1.7.0   (00.653*kW)                                                             Power being extracted in kW at this precise moment.
+1-0:2.7.0   (00.000*kW)                                                             Power being injected in kW at this precise moment.
+1-0:21.7.0  (00.653*kW)                                                             Zelfde als 1.7.0, but for L1
+1-0:22.7.0  (00.000*kW)                                                             Zelfde als 2.7.0, but for L1
+1-0:32.7.0  (221.2*V)                                                               Voltage at this precise moment in phase 1 in V.
+1-0:31.7.0  (004.00*A)                                                              Current at this precise moment in phase 1 in A.
+0-0:96.3.10 (1)                                                                     Switch electricity ?? Denk inject of afname
+0-0:17.0.0  (99.999*kW)                                                             Power limit set
+1-0:31.4.0  (999.99*A)                                                              current limit
+0-1:96.3.10 (0)
+0-2:96.3.10 (0)
+0-3:96.3.10 (0)
+0-4:96.3.10 (0)
+0-0:96.13.0 ()
+0-1:24.1.0  (003)
+0-1:96.1.1  (3753414733363530313236393238)                                          Serial number gas
+0-1:96.1.2  (000000000000000000)
+0-1:24.4.0  (1)
+0-1:24.2.3  (250727211355S)(00004.409*m3)                                           Gas
+0-2:24.1.0  (007)
+0-2:96.1.1  (3853455430303330313138383032)                                          Serial water
+0-2:96.1.2  (000000000000000000)
+0-2:24.2.1  (250727211200S)(00003.575*m3)                                           Water
+
+To store
+0-0:1.0.0   (250727211724S)                                                         Timestamp
+1-0:1.8.1   (000049.439*kWh)                                                        Total energy extraction in kWh at the day rate.
+1-0:1.8.2   (000174.490*kWh)                                                        Total energy extraction in kWh at the night rate.
+1-0:2.8.1   (000040.338*kWh)                                                        Total energy injection in kWh at the day rate.
+1-0:2.8.2   (000011.691*kWh)                                                        Total energy injection in kWh at the night rate.
+0-0:96.14.0 (0002)                                                                  Current rate (1=day,2=night)
+1-0:1.4.0   (00.116*kW)                                                             Positive active demand in a current demand period (A+) [kW]
+1-0:1.6.0   (250712220000S)(04.517*kW)  	                                        Current month's peak extraction in kW.
+0-0:98.1.0  (1)(1-0:1.6.0)(1-0:1.6.0)(240801000000S)(240701000000S)(00.000*kW)      Iets van maand data ???
+1-0:1.7.0   (00.653*kW)                                                             Power being extracted in kW at this precise moment.
+1-0:2.7.0   (00.000*kW)                                                             Power being injected in kW at this precise moment.
+1-0:32.7.0  (221.2*V)                                                               Voltage at this precise moment in phase 1 in V.
+1-0:31.7.0  (004.00*A)                                                              Current at this precise moment in phase 1 in A.
+0-0:96.3.10 (1)                                                                     Switch electricity ?? Denk inject of afname
+0-1:24.2.3  (250727211355S)(00004.409*m3)                                           Gas
+0-2:24.2.1  (250727211200S)(00003.575*m3)                                           Water
