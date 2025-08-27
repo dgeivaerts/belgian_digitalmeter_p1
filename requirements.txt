@@ -3,3 +3,5 @@ crcmod
 tabulate
 psycopg2
 pytz
+requests
+flask

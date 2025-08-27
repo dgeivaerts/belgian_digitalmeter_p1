@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.5.1/chart.js"></script>
+<head>
+  <title>Weather Update</title>
+</head>
+<body>
+<div id="power" ></div>
+<div width="50">
+  <canvas id="powerToday"  style="border:1px solid"></canvas>
+</div>
+</body>
+<script>
+  // Client-side Javascript in the HTML
+
+  var targetContainer = document.getElementById("powerToday");
+/*  var eventSource = new EventSource("http://127.0.0.1:5000/stream");
+  eventSource.onmessage = function(e) {
+    console.log(e.data);
+    powerToday.data.datasets[0].data=e.data;
+    powerToday.update();
+  };*/
+
+  var options = {
+    type: 'doughnut',
+    data: {
+      labels: ["Production","Max"],
+      datasets: [{
+        label: 'Watt',
+        data: [2000,2000],
+        backgroundColor: ["Red","White"]
+      }]
+    },
+    options: {
+      rotation: 270, // start angle in degrees
+      circumference: 180 // sweep angle in degrees
+    }
+  }
+
+  var config = {
+    type: 'line',
+    data:  {
+      datasets: [
+        {
+          data: [["2025-07-18T17:29:46.747533+00:00", 62], ["2025-08-18T17:29:47.561709+00:00", 62], ["2025-09-18T17:29:48.381032+00:00", 62]]
+        }
+      ]
+    },
+    options: {
+      scales: {
+        x: {
+          type: 'time',
+          time: {
+            unit: 'month'
+          }
+        }
+      },
+      responsive: true,
+      plugins: {
+        legend: {
+          position: 'top',
+        },
+        title: {
+          display: true,
+          text: 'Chart.js Line Chart'
+        }
+      }
+    },
+  };
+
+  var ctx = document.getElementById('chartJSContainer').getContext('2d');
+  var gauge = new Chart(ctx, options);
+
+  var ctx2 = document.getElementById('powerToday').getContext('2d');
+  var powerToday = new Chart(ctx2, config);
+
+</script>
+
+
+</html>

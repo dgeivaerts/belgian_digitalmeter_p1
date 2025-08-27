@@ -14,6 +14,8 @@ import re
 from datetime import datetime
 import pytz
 
+from postgres.postgress import executeSQL
+
 timezone = pytz.timezone('Europe/Brussels')
 schema="public"
 table="telegram"
@@ -65,41 +67,6 @@ def checkcrc(p1telegram):
         return False
     return True
 
-def createTableSQL():
-    sql="""
-        CREATE TABLE {tableschema}."{tablename}" (
-                                                     ts timestamp with time zone NOT NULL,
-                                                     value numeric(10,3) NOT NULL,
-            CONSTRAINT "{tablename}_pk" PRIMARY KEY (ts)
-            );
-        """
-    #        COMMENT ON TABLE public."{tablename}" IS "{tablecomment}";
-    for obis in obiscodes:
-        if obis!="0-0:1.0.0":
-            #        print(sql.format(tablename=obis, tablecomment=obiscodes[obis]["comment"]))
-            executeSQL(sql.format(tableschema=schema,tablename=obis))
-
-def executeSQL(sql):
-    try:
-        conn = psycopg2.connect(
-            database="postgres",
-            user="postgres",
-            password="example",
-            host="localhost",
-            port="5432"
-        )
-        cur = conn.cursor()
-        cur.execute(sql)
-        print(sql)
-        cur.close()
-        conn.commit()
-    except (Exception, psycopg2.DatabaseError) as error:
-        print(error)
-    finally:
-        if conn:
-            conn.close()
-            print("Database connection closed.")
-
 def processTelegramLine(line):
     print("Processing " + line)
     obis = line.split("(")[0]
@@ -108,11 +75,8 @@ def processTelegramLine(line):
         print("Processed: "+ obis + " with value " + str(obiscodes[obis]["current"]))
 
 
-def processObisCodes():
-    sql= """
-         insert into {tableschema}."{tablename}"
-         values('{ts}', {value}); \
-         """
+def process_obis_codes():
+    sql= """insert into {tableschema}."{tablename}" values('{ts}', {value});"""
     for obis in obiscodes:
         if obis!="0-0:1.0.0":
             if obiscodes[obis]["current"]!= obiscodes[obis]["previous"]:
@@ -131,17 +95,16 @@ def processObisCodes():
                 executeSQL(sql.format(tableschema=schema,tablename=obis,ts=str(timezone.localize(datetime.strptime(ts[1:-2],'%y%m%d%H%M%S'),is_dst=is_dst_val)) ,value=value))
                 obiscodes[obis]["previous"]=obiscodes[obis]["current"]
 
-def processTelegram(telegram):
+def process_telegram(telegram):
     for line in telegram.split(b'\r\n'):
         processTelegramLine(line.decode('ascii'))
-    processObisCodes()
+    process_obis_codes()
     print(obiscodes["1-0:1.7.0"]["current"][0] + ' ' + obiscodes["1-0:2.7.0"]["current"][0])
 
 
 def main():
     ser = serial.Serial(serialport, 115200, xonxoff=1)
     p1telegram = bytearray()
-    createTableSQL()
     while True:
         try:
             # read input from serial port
@@ -166,7 +129,7 @@ def main():
                     print('*' * 40)
                 if checkcrc(p1telegram):
                     # parse telegram contents, line by line
-                    processTelegram(p1telegram)
+                    process_telegram(p1telegram)
         except KeyboardInterrupt:
             print("Stopping...")
             ser.close()
