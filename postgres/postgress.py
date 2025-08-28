@@ -10,7 +10,7 @@ def executeSQL(sql):
         conn = psycopg2.connect(
             database="postgres",
             user="postgres",
-            password="example",
+            password="postgres",
             host="localhost",
             port="5432"
         )

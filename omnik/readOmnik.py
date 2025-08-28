@@ -1,6 +1,5 @@
 import socket
-from datetime import timezone, datetime
-
+from datetime import datetime
 import pytz
 
 from omnik import InverterMsg
@@ -11,7 +10,7 @@ ip = '192.168.1.220'
 port = 8899
 time_out = 10
 e_today = 0
-timezone = pytz.timezone('Europe/Brussels')
+InverterTimezone = pytz.timezone('Europe/Brussels')
 
 def generate_buffer(device_serial_number):
     """
@@ -60,13 +59,14 @@ def makeCall():
 
 def process_omnik_msg(msg):
     global e_today
-    ts=str(datetime.now(timezone))
-    sql= """insert into public.omnikPower values('{ts}',{power});"""
-    executeSQL(sql.format(ts=ts, power=msg.p_ac(1)))
-    if msg.e_today!=e_today:
-        sql= """insert into public.omnik values('{ts}', {today},{total});"""
-        executeSQL(sql.format(ts=ts, today=msg.e_today , total=msg.e_total))
-        e_today=msg.e_today
+    if msg.p_ac(1)!=0:
+        ts=str(datetime.now(InverterTimezone))
+        sql= """insert into public.omnikPower values('{ts}',{power});"""
+        executeSQL(sql.format(ts=ts, power=msg.p_ac(1)))
+        if msg.e_today!=e_today:
+            sql= """insert into public.omnik values('{ts}', {today},{total});"""
+            executeSQL(sql.format(ts=ts, today=msg.e_today , total=msg.e_total))
+            e_today=msg.e_today
 
 def run():
     while True:

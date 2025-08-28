@@ -1,46 +1,75 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Monitor Hallebaan</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>Bootstrap Example</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+            rel="stylesheet"
+            href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css"
+    />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+    <script src="https://code.highcharts.com/highcharts.js"></script>
 </head>
 <body>
-<canvas id="salesChart" width="400" height="200"></canvas>
-<script>
-    async function fetchData() {
-        const response = await fetch('/data');
-        const data = await response.json();
-        return data;
-    }
-
-    async function createChart() {
-        const data = await fetchData();
-        const ctx = document.getElementById('salesChart').getContext('2d');
-        const salesChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: data.ts,
-                datasets: [{
-                    label: 'Total Sales Quantity',
-                    data: data.value,
-                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                    borderColor: 'rgba(75, 192, 192, 1)',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                scales: {
-                    y: {
-                        beginAtZero: true
-                    }
-                }
-            }
-        });
-    }
-
-    createChart();
-</script>
+<div class="container">
+    <h1>Westmalle monitor</h1>
+    <div class="row">
+        <div class="panel panel-primary">
+            <div class="panel-heading">Water</div>
+                <div class="col-lg-4">
+                    <div id="water_intraday" class="panel-body"></div>
+                </div>
+                <div class="col-lg-4">
+                    <div id="water_month" class="panel-body"></div>
+                </div>
+                <div class="col-lg-4">.col-sm-4</div>
+            </div>
+        </div>
+    </div>
+</div>
 </body>
+<script>
+    Highcharts.chart('water_intraday', {
+        credits: {
+            enabled: false
+        },
+        title: {
+            text: 'Vandaag'
+        },
+        yAxis: {
+            title: {
+                text: 'm3'
+            }
+        },
+        series: [{
+            name: 'Verbruik',
+            data: [
+                43934, 48656, 65165, 81827, 112143, 142383,
+                171533, 165174, 155157, 161454, 154610, 168960, 171558
+            ]
+        }]
+    });
+
+    Highcharts.chart('water_month', {
+        credits: {
+            enabled: false
+        },
+        chart: {
+            type: 'column'
+        },
+        title: {
+            text: 'Laatste 30 dagen'
+        },
+        series: [
+            {
+                name: 'Water',
+                data: [387749, 280000, 129000, 64300, 54000, 34300]
+            }
+        ]
+    });
+
+
+</script>
 </html>

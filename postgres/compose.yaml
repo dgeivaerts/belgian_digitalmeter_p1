@@ -3,11 +3,12 @@ services:
     image: postgres
     restart: always
     environment:
-      POSTGRES_PASSWORD: example
+      POSTGRES_PASSWORD: postgres
     ports:
       - 5432:5432
     volumes:
       - ~/postgres/p1:/var/lib/postgresql/data
+      - ./create-db.sql:/docker-entrypoint-initdb.d/db.sql
   adminer:
     image: dockette/adminer
     ports:
